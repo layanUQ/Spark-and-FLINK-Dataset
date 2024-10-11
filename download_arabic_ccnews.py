@@ -7,7 +7,7 @@ dataset = load_dataset('stanford-oval/ccnews', split='train')
 arabic_dataset = dataset.filter(lambda example: example['language'] == 'ar')
 
 # Optional: Limit to 10 million records
-limited_arabic_dataset = arabic_dataset.select(range(min(11_500_000, len(arabic_dataset))))
+limited_arabic_dataset = arabic_dataset.select(range(min(11_600_000, len(arabic_dataset))))
 
 # Save to disk if needed
 limited_arabic_dataset.to_csv('ccnews_arabic_filtered.csv')
