@@ -30,5 +30,7 @@ val highest_publishers_per_year = publisher_trends.withColumn("rank", row_number
   .filter(col("rank") === 1)
   .select("year", "publisher", "article_count")
 
-// Show the results
-highest_publishers_per_year.show(30)
+// Save the result to a CSV file
+highest_publishers_per_year.write
+  .option("header", "true") // Include header in the CSV file
+  .csv("C:\\Users\\96659\\Desktop\\python_ws\\article_count_per_publisher_per_year.csv")
