@@ -14,7 +14,7 @@ spark: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@4f1
 scala> val columns = Seq("requested_url", "plain_text", "published_date", "title", "tags", "categories", "author", "sitename", "image_url", "language", "language_score", "responded_url", "publisher", "warc_path", "crawl_date")
 columns: Seq[String] = List(requested_url, plain_text, published_date, title, tags, categories, author, sitename, image_url, language, language_score, responded_url, publisher, warc_path, crawl_date)
 
-scala> val df = spark.read.option("header", "true").option("inferSchema", "false").csv("C:\\Users\\96659\\Desktop\\ccnews\\data_gathered\\arabic_ccnews_partial.csv").toDF(columns: _*)
+scala> val df = spark.read.option("header", "true").option("inferSchema", "false").csv("C:\\Users\\96659\\Desktop\\ccnews\\data_gathered\\*.csv").toDF(columns: _*)
 df: org.apache.spark.sql.DataFrame = [requested_url: string, plain_text: string ... 13 more fields]
 
 scala>
@@ -25,7 +25,11 @@ df_cleaned: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [published_
 scala> val publisher_trends = df_cleaned.withColumn("year", year(to_date(col("published_date"), "yyyy-MM-dd"))).groupBy("publisher").agg(count("publisher").alias("article_count"))
 publisher_trends: org.apache.spark.sql.DataFrame = [publisher: string, article_count: bigint]
 
-scala>  val top_publishers = publisher_trends.orderBy(col("article_count").desc).limit(15)
+scala>  val top_publishers = publisher_trends.orderBy(col("article_count").desc).limit(5)
 top_publishers: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [publisher: string, article_count: bigint]
 
-scala> top_publishers.show()
+scala> // Save the result to a CSV file
+top_publishers.write
+  .option("header", "true") // Include header in the CSV file
+  .csv("C:\\Users\\96659\\Desktop\\python_ws\\top_publishers.csv")
+
