@@ -1,0 +1,34 @@
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.expressions.Window  // Import the Window class
+
+val spark = SparkSession.builder().appName("Publisher Article Count").getOrCreate()
+
+// Define columns
+val columns = Seq("requested_url", "plain_text", "published_date", "title", "tags", "categories", "author", "sitename", "image_url", "language", "language_score", "responded_url", "publisher", "warc_path", "crawl_date")
+
+// Load a single CSV file
+val filePath = "C:\\Users\\96659\\Desktop\\ccnews\\data_gathered\\*.csv"
+val df = spark.read.option("header", "true").option("inferSchema", "false").csv(filePath).toDF(columns: _*)
+
+// Clean and filter the published_date
+val df_cleaned = df.select("published_date", "publisher")
+                   .filter(col("published_date").isNotNull && col("published_date") =!= "")
+                   .filter(to_date(col("published_date"), "yyyy-MM-dd").isNotNull)
+
+// Extract year and filter for the range 1995-2023
+val df_with_year = df_cleaned.withColumn("year", year(to_date(col("published_date"), "yyyy-MM-dd")))
+                               .filter(col("year").between(1995, 2023))
+
+// Group by year and publisher, and count the articles
+val publisher_trends = df_with_year.groupBy("year", "publisher")
+                                    .agg(count("publisher").alias("article_count"))
+
+// Find the publisher with the highest article count per year
+val highest_publishers_per_year = publisher_trends.withColumn("rank", row_number()
+  .over(Window.partitionBy("year").orderBy(col("article_count").desc)))
+  .filter(col("rank") === 1)
+  .select("year", "publisher", "article_count")
+
+// Show the results
+highest_publishers_per_year.show(30)
